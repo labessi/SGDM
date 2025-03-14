@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL") // Utilise l'URL définie dans .env
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  nom      String
+  prenom   String
+  email    String  @unique
+  password String
+  role     Role    
+  dossiers DossierMedical[]
+  refreshTokens RefreshToken[]
+  rendezVous RendezVous[]
+}
+
+model DossierMedical {
+  id         Int      @id @default(autoincrement())
+  patientNom String
+  patientAge Int
+  userId     Int
+  user       User    @relation(fields: [userId], references: [id])
+  consultations Consultation[]
+  rendezVous     RendezVous[]
+}
+
+model Consultation {
+  id           Int      @id @default(autoincrement())
+  date         DateTime
+  motif        String
+  observations String
+  dossierId    Int
+  dossier      DossierMedical @relation(fields: [dossierId], references: [id])
+  prescriptions  Prescription[]
+}
+
+enum Role {
+  ADMIN
+  MEDECIN
+}
+
+model RefreshToken {
+  id        Int     @id @default(autoincrement())
+  token     String @unique
+  userId    Int
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Prescription {
+  id              Int      @id @default(autoincrement())
+  medicament     String
+  dosage         String
+  duree          String
+  consultationId Int
+  consultation   Consultation @relation(fields: [consultationId], references: [id])
+}
+
+model RendezVous {
+  id          Int      @id @default(autoincrement())
+  date        DateTime
+  motif       String
+  status      String   @default("CONFIRME") // CONFIRME, ANNULE, EN_ATTENTE
+  userId      Int      // L'ID du médecin qui a ce rendez-vous
+  user        User     @relation(fields: [userId], references: [id])
+  dossierId   Int      // L'ID du dossier médical du patient concerné
+  dossier     DossierMedical @relation(fields: [dossierId], references: [id])
+}
