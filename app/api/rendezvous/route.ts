@@ -6,13 +6,13 @@ const prisma = new PrismaClient();
 
 /** 🔹 Récupérer les rendez-vous */
 export async function GET(req: NextRequest) {
-  // Vérifier l'authentification (ADMIN voit tout, MEDECIN voit ses propres rdv)
-  const userRole = req.headers.get("role");
-  const userId = Number(req.headers.get("userId"));
+  // Utiliser le middleware pour vérifier l'authentification
+  const authCheck = authMiddleware(req, ["ADMIN", "MEDECIN"]);
+  if (authCheck) return authCheck;
 
-  if (!userRole || !userId) {
-    return NextResponse.json({ error: "Authentification requise." }, { status: 401 });
-  }
+  // Récupérer le rôle et l'ID depuis les en-têtes (définis par le middleware)
+  const userRole = req.headers.get("userRole"); // Remarquez le nom: "userRole" et non "role"
+  const userId = Number(req.headers.get("userId"));
 
   try {
     let rendezVous;
@@ -20,13 +20,13 @@ export async function GET(req: NextRequest) {
     if (userRole === "ADMIN") {
       // 🔹 L'Admin voit tous les rendez-vous
       rendezVous = await prisma.rendezVous.findMany({
-        include: { dossier: true, user: true }, // Inclure les infos patient et médecin
+        include: { dossier: true, user: true },
       });
     } else if (userRole === "MEDECIN") {
       // 🔹 Le Médecin ne voit que ses propres rendez-vous
       rendezVous = await prisma.rendezVous.findMany({
         where: { userId },
-        include: { dossier: true }, // Inclure les infos patient
+        include: { dossier: true },
       });
     } else {
       return NextResponse.json({ error: "Accès refusé." }, { status: 403 });
