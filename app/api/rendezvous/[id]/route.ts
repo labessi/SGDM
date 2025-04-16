@@ -4,16 +4,17 @@ import { authMiddleware } from "../../middlewares/authMiddleware";
 
 const prisma = new PrismaClient();
 
-// 🟢 Modifier un rendez-vous (ADMIN & MEDECIN)
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } } // ✅ Extraction correcte des paramètres
-) {
+// Modifier un rendez-vous (ADMIN & MEDECIN)
+export async function PUT(req: NextRequest) {
   const authCheck = authMiddleware(req, ["ADMIN", "MEDECIN"]);
   if (authCheck) return authCheck;
 
   try {
-    const rendezVousId = Number(params?.id); // ✅ Vérifie si params existe
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/");
+    const id = segments[segments.indexOf("rendezvous") + 1];
+    const rendezVousId = Number(id);
+
     if (isNaN(rendezVousId)) {
       return NextResponse.json({ error: "ID du rendez-vous invalide." }, { status: 400 });
     }
@@ -41,16 +42,17 @@ export async function PUT(
   }
 }
 
-// 🟢 Supprimer un rendez-vous (ADMIN & MEDECIN)
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } } // ✅ Extraction correcte des paramètres
-) {
+// Supprimer un rendez-vous (ADMIN & MEDECIN)
+export async function DELETE(req: NextRequest) {
   const authCheck = authMiddleware(req, ["ADMIN", "MEDECIN"]);
   if (authCheck) return authCheck;
 
   try {
-    const rendezVousId = Number(params?.id); // ✅ Vérifie si params existe
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/");
+    const id = segments[segments.indexOf("rendezvous") + 1];
+    const rendezVousId = Number(id);
+
     if (isNaN(rendezVousId)) {
       return NextResponse.json({ error: "ID du rendez-vous invalide." }, { status: 400 });
     }
