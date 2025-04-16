@@ -17,6 +17,7 @@ model User {
   dossiers DossierMedical[]
   refreshTokens RefreshToken[]
   rendezVous RendezVous[]
+  @@map("user") // 👈 mapping du modèle User vers la table `user`
 }
 
 model DossierMedical {
@@ -27,6 +28,7 @@ model DossierMedical {
   user       User    @relation(fields: [userId], references: [id])
   consultations Consultation[]
   rendezVous     RendezVous[]
+  @@map("dossiermedical")
 }
 
 model Consultation {
@@ -37,6 +39,7 @@ model Consultation {
   dossierId    Int
   dossier      DossierMedical @relation(fields: [dossierId], references: [id])
   prescriptions  Prescription[]
+  @@map("consultation")
 }
 
 enum Role {
@@ -50,6 +53,7 @@ model RefreshToken {
   userId    Int
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  @@map("refreshtoken") // 👈 ceci dit à Prisma : "utilise la table SQL `refreshtoken`"
 }
 
 model Prescription {
@@ -59,6 +63,7 @@ model Prescription {
   duree          String
   consultationId Int
   consultation   Consultation @relation(fields: [consultationId], references: [id])
+  @@map("prescription")
 }
 
 model RendezVous {
@@ -70,4 +75,5 @@ model RendezVous {
   user        User     @relation(fields: [userId], references: [id])
   dossierId   Int      // L'ID du dossier médical du patient concerné
   dossier     DossierMedical @relation(fields: [dossierId], references: [id])
+  @@map("rendezvous")
 }
