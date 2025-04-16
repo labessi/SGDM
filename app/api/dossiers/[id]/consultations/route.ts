@@ -4,17 +4,14 @@ import { authMiddleware } from "../../../middlewares/authMiddleware";
 
 const prisma = new PrismaClient();
 
-export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
-  // Vérifier l'authentification (seuls les MEDECINS peuvent voir les consultations)
+export async function GET(req: NextRequest) {
   const authCheck = authMiddleware(req, ["MEDECIN"]);
   if (authCheck) return authCheck;
 
   try {
-    // ✅ Correction : `await` pour récupérer params correctement
-    const { id } = await context.params;
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/");
+    const id = segments[segments.indexOf("dossiers") + 1];
     const dossierId = Number(id);
 
     if (isNaN(dossierId)) {
@@ -32,17 +29,14 @@ export async function GET(
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
-  // Vérifier l'authentification (seuls les MEDECINS peuvent ajouter une consultation)
+export async function POST(req: NextRequest) {
   const authCheck = authMiddleware(req, ["MEDECIN"]);
   if (authCheck) return authCheck;
 
   try {
-    // ✅ Correction : `await` pour récupérer params correctement
-    const { id } = await context.params;
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/");
+    const id = segments[segments.indexOf("dossiers") + 1];
     const dossierId = Number(id);
 
     if (isNaN(dossierId)) {
@@ -64,8 +58,10 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ message: "Consultation ajoutée avec succès.", consultation: newConsultation });
-
+    return NextResponse.json({
+      message: "Consultation ajoutée avec succès.",
+      consultation: newConsultation,
+    });
   } catch (error) {
     console.error("Erreur lors de l'ajout de la consultation :", error);
     return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
