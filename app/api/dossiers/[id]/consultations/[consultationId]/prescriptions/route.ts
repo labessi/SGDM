@@ -4,17 +4,16 @@ import { authMiddleware } from "../../../../../middlewares/authMiddleware";
 
 const prisma = new PrismaClient();
 
-export async function GET(
-  req: NextRequest,
-  context: { params: { id: string; consultationId: string } }
-) {
-  // Vérifier l'authentification (seuls les MEDECINS peuvent voir les prescriptions)
+export async function GET(req: NextRequest) {
   const authCheck = authMiddleware(req, ["MEDECIN"]);
   if (authCheck) return authCheck;
 
   try {
-    // Extraire correctement les paramètres
-    const { id, consultationId } = context.params; // ⚠️ Supprimé `await`
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/");
+    const id = segments[segments.indexOf("dossiers") + 1];
+    const consultationId = segments[segments.indexOf("consultations") + 1];
+
     const dossierId = Number(id);
     const consultationIdNumber = Number(consultationId);
 
@@ -33,17 +32,16 @@ export async function GET(
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  context: { params: { id: string; consultationId: string } }
-) {
-  // Vérifier l'authentification (seuls les MEDECINS peuvent ajouter une prescription)
+export async function POST(req: NextRequest) {
   const authCheck = authMiddleware(req, ["MEDECIN"]);
   if (authCheck) return authCheck;
 
   try {
-    // Extraire correctement les paramètres
-    const { id, consultationId } = context.params; // ⚠️ Supprimé `await`
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/");
+    const id = segments[segments.indexOf("dossiers") + 1];
+    const consultationId = segments[segments.indexOf("consultations") + 1];
+
     const dossierId = Number(id);
     const consultationIdNumber = Number(consultationId);
 
@@ -66,11 +64,12 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ message: "Prescription ajoutée avec succès.", prescription: newPrescription });
-
+    return NextResponse.json({
+      message: "Prescription ajoutée avec succès.",
+      prescription: newPrescription,
+    });
   } catch (error) {
     console.error("Erreur lors de l'ajout de la prescription :", error);
     return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
   }
 }
-console.log(prisma);
